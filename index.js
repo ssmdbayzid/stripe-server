@@ -35,11 +35,31 @@ app.get('/', (req, res)=> {
 
 // Endpoint to create a PaymentIntent
 app.post('/create-checkout-session', async (req, res) => {
-  console.log(req.body.length)
+  console.log(req.body.cartItems.length)
+
+  const line_items = req.body.cartItems.map((item)=>{
+    return {
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: item.name,
+          images: [item.image],
+          description: item.desc,
+          metadata: {
+            id: item.id
+          }
+        },
+        unit_amount: item.price * 100, // Amount in cents
+      },
+      quantity: item.cartQuantity,
+    }
+  })
+
+  
   try {
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
+      // payment_method_types: ['card'],
+     /* line_items: [
         {
           price_data: {
             currency: 'usd',
@@ -48,9 +68,20 @@ app.post('/create-checkout-session', async (req, res) => {
             },
             unit_amount: 1000, // Amount in cents
           },
+          quantity: 2,
+        },
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'I phone 15',
+            },
+            unit_amount: 2000, // Amount in cents
+          },
           quantity: 1,
         },
-      ],
+      ],*/
+      line_items,
       mode: 'payment',
       success_url: 'http://localhost:3000/success', // Redirect URL after successful payment
       cancel_url: 'http://localhost:3000/cancel', // Redirect URL if payment is canceled
